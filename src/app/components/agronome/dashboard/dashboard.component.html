@@ -1,0 +1,333 @@
+<div class="agronome-dashboard">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-left">
+      <h1>🔬 SmartCow - Espace Agronome</h1>
+      <p class="subtitle">Analyse et Supervision Vétérinaire</p>
+    </div>
+    <div class="user-menu">
+      <span class="user-name">{{ (authService.currentUser | async)?.full_name }}</span>
+      <span class="user-role">Agronome</span>
+      <button (click)="logout()" class="btn-logout">Déconnexion</button>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="dashboard-nav">
+    <a routerLink="/agronome/dashboard" routerLinkActive="active">
+      📊 Tableau de bord
+    </a>
+    <a routerLink="/agronome/analytics" routerLinkActive="active">
+      📈 Analyses
+    </a>
+    <a routerLink="/agronome/cows" routerLinkActive="active">
+      🐄 Troupeau
+    </a>
+    <a routerLink="/agronome/alerts" routerLinkActive="active">
+      🚨 Alertes
+    </a>
+    <a routerLink="/agronome/predictions" routerLinkActive="active">
+      🤖 Prédictions AI
+    </a>
+    <a routerLink="/agronome/reports" routerLinkActive="active">
+      📄 Rapports
+    </a>
+  </nav>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des données analytiques...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading" class="dashboard-content">
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <!-- Total Vaches -->
+      <div class="kpi-card">
+        <div class="kpi-icon">🐄</div>
+        <div class="kpi-content">
+          <h3>{{ stats.totalCows }}</h3>
+          <p>Total Vaches</p>
+          <span class="kpi-detail">{{ stats.activeCows }} actives</span>
+        </div>
+      </div>
+
+      <!-- Santé du Troupeau -->
+      <div class="kpi-card good">
+        <div class="kpi-icon">❤️</div>
+        <div class="kpi-content">
+          <h3>{{ stats.healthyPercentage }}%</h3>
+          <p>Vaches en Bonne Santé</p>
+          <span class="kpi-detail">Score ≥ 80/100</span>
+        </div>
+      </div>
+
+      <!-- Vaches à Risque -->
+      <div class="kpi-card" [class.critical]="stats.atRiskPercentage > 10">
+        <div class="kpi-icon">⚠️</div>
+        <div class="kpi-content">
+          <h3>{{ stats.atRiskPercentage }}%</h3>
+          <p>Vaches à Risque</p>
+          <span class="kpi-detail">Score < 60/100</span>
+        </div>
+      </div>
+
+      <!-- Alertes Critiques -->
+      <div class="kpi-card critical">
+        <div class="kpi-icon">🚨</div>
+        <div class="kpi-content">
+          <h3>{{ stats.criticalAlerts }}</h3>
+          <p>Alertes Critiques</p>
+          <span class="kpi-detail">{{ stats.warningAlerts }} warnings</span>
+        </div>
+      </div>
+
+      <!-- Température Moyenne -->
+      <div class="kpi-card">
+        <div class="kpi-icon">🌡️</div>
+        <div class="kpi-content">
+          <h3>{{ stats.avgTemperature }}°C</h3>
+          <p>Température Moyenne</p>
+          <span class="kpi-detail">Normal: 37.5-39.5°C</span>
+        </div>
+      </div>
+
+      <!-- Rythme Cardiaque Moyen -->
+      <div class="kpi-card">
+        <div class="kpi-icon">💓</div>
+        <div class="kpi-content">
+          <h3>{{ stats.avgHeartRate }}</h3>
+          <p>Rythme Cardiaque Moy.</p>
+          <span class="kpi-detail">Normal: 50-100 bpm</span>
+        </div>
+      </div>
+
+      <!-- Activité Moyenne -->
+      <div class="kpi-card">
+        <div class="kpi-icon">🏃</div>
+        <div class="kpi-content">
+          <h3>{{ stats.avgActivity }}%</h3>
+          <p>Activité Moyenne</p>
+          <span class="kpi-detail">Troupeau actif</span>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="kpi-card info">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-content">
+          <h3>{{ stats.totalCows * 24 }}</h3>
+          <p>Mesures/Jour</p>
+          <span class="kpi-detail">Monitoring continu</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+
+      <!-- Vaches Critiques -->
+      <div class="card priority">
+        <div class="card-header">
+          <h2>🚨 Vaches Nécessitant Attention Immédiate</h2>
+          <span class="badge critical">{{ criticalCows.length }}</span>
+        </div>
+        <div class="card-body">
+          <div *ngIf="criticalCows.length === 0" class="empty-state">
+            <p>✅ Aucune vache critique</p>
+          </div>
+          <div *ngFor="let cow of criticalCows" class="cow-critical-item">
+            <div class="cow-header">
+              <div class="cow-info">
+                <h3>{{ cow.name }}</h3>
+                <p>{{ cow.tag_id }} • {{ cow.breed }}</p>
+              </div>
+              <span [class]="getHealthClass(cow.health_score)" class="health-badge">
+                {{ cow.health_score }}%
+              </span>
+            </div>
+            <div class="cow-details">
+              <span class="detail">📍 Localisation disponible</span>
+              <span class="detail">⏰ Dernière mesure: Il y a 5 min</span>
+            </div>
+            <div class="cow-actions">
+              <button [routerLink]="['/agronome/cows', cow.id]" class="btn-analyze">
+                📊 Analyser
+              </button>
+              <button class="btn-protocol">
+                💊 Protocole
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alertes Actives Prioritaires -->
+      <div class="card">
+        <div class="card-header">
+          <h2>🔔 Alertes Prioritaires</h2>
+          <div class="filters">
+            <span class="filter-badge critical">{{ stats.criticalAlerts }} Critiques</span>
+            <span class="filter-badge warning">{{ stats.warningAlerts }} Warnings</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div *ngFor="let alert of alerts.slice(0, 8)" class="alert-item">
+            <div class="alert-header">
+              <span [class]="getSeverityClass(alert.severity)" class="severity-badge">
+                {{ alert.severity }}
+              </span>
+              <span class="alert-type">{{ alert.type }}</span>
+              <span [class]="getStatusClass(alert.status)" class="status-badge">
+                {{ alert.status }}
+              </span>
+            </div>
+            <p class="alert-message">{{ alert.message }}</p>
+            <div class="alert-meta">
+              <span>🐄 Vache #{{ alert.cow_id }}</span>
+              <span>🕐 {{ alert.created_at | date: 'short' }}</span>
+            </div>
+            <div class="alert-actions" *ngIf="alert.status === 'NEW'">
+              <button class="btn-small">✅ Reconnaître</button>
+              <button class="btn-small primary">🔧 Traiter</button>
+            </div>
+          </div>
+          <a routerLink="/agronome/alerts" class="view-all-link">
+            Voir toutes les alertes →
+          </a>
+        </div>
+      </div>
+
+      <!-- Analyse Rapide -->
+      <div class="card">
+        <div class="card-header">
+          <h2>📈 Analyse Rapide - 24h</h2>
+        </div>
+        <div class="card-body">
+          <div class="quick-stats">
+            <div class="stat-row">
+              <span class="stat-label">🌡️ Température</span>
+              <div class="stat-bar">
+                <div class="stat-fill" [style.width]="'75%'"></div>
+              </div>
+              <span class="stat-value">{{ stats.avgTemperature }}°C</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">💓 Rythme Cardiaque</span>
+              <div class="stat-bar">
+                <div class="stat-fill" [style.width]="'68%'"></div>
+              </div>
+              <span class="stat-value">{{ stats.avgHeartRate }} bpm</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">🏃 Activité</span>
+              <div class="stat-bar">
+                <div class="stat-fill" [style.width]="stats.avgActivity + '%'"></div>
+              </div>
+              <span class="stat-value">{{ stats.avgActivity }}%</span>
+            </div>
+          </div>
+          <button routerLink="/agronome/analytics" class="btn-full">
+            📊 Analyses Détaillées
+          </button>
+        </div>
+      </div>
+
+      <!-- Prédictions AI -->
+      <div class="card">
+        <div class="card-header">
+          <h2>🤖 Prédictions Intelligence Artificielle</h2>
+          <span class="badge ai">Beta</span>
+        </div>
+        <div class="card-body">
+          <div class="prediction-item">
+            <div class="prediction-icon risk-high">⚠️</div>
+            <div class="prediction-content">
+              <h4>Risque Sanitaire - Vache #5</h4>
+              <p>Risque élevé de problème de santé dans 48-72h</p>
+              <span class="confidence">Confiance: 85%</span>
+            </div>
+          </div>
+          <div class="prediction-item">
+            <div class="prediction-icon risk-medium">🔥</div>
+            <div class="prediction-content">
+              <h4>Période de Chaleur - Vache #12</h4>
+              <p>Chaleur prévue dans 3-5 jours</p>
+              <span class="confidence">Confiance: 78%</span>
+            </div>
+          </div>
+          <div class="prediction-item">
+            <div class="prediction-icon risk-low">🤰</div>
+            <div class="prediction-content">
+              <h4>Vêlage - Vache #8</h4>
+              <p>Vêlage prévu dans 15 jours</p>
+              <span class="confidence">Confiance: 92%</span>
+            </div>
+          </div>
+          <button routerLink="/agronome/predictions" class="btn-full">
+            🤖 Toutes les Prédictions
+          </button>
+        </div>
+      </div>
+
+      <!-- Actions Rapides -->
+      <div class="card actions">
+        <div class="card-header">
+          <h2>⚡ Actions Rapides</h2>
+        </div>
+        <div class="card-body">
+          <button routerLink="/agronome/reports" class="action-btn">
+            📄 Générer Rapport Quotidien
+          </button>
+          <button routerLink="/agronome/analytics" class="action-btn">
+            📊 Analyse Comparative
+          </button>
+          <button class="action-btn">
+            💊 Créer Protocole Traitement
+          </button>
+          <button routerLink="/agronome/cows" class="action-btn">
+            🐄 Vue d'Ensemble Troupeau
+          </button>
+          <button class="action-btn">
+            📧 Envoyer Recommandations
+          </button>
+        </div>
+      </div>
+
+      <!-- Performances Hebdomadaires -->
+      <div class="card">
+        <div class="card-header">
+          <h2>📊 Performance Hebdomadaire</h2>
+        </div>
+        <div class="card-body">
+          <div class="performance-grid">
+            <div class="perf-item">
+              <span class="perf-label">Alertes Résolues</span>
+              <span class="perf-value good">28/32</span>
+              <span class="perf-percent">87%</span>
+            </div>
+            <div class="perf-item">
+              <span class="perf-label">Temps Réponse Moy.</span>
+              <span class="perf-value">2.5h</span>
+              <span class="perf-trend up">-15%</span>
+            </div>
+            <div class="perf-item">
+              <span class="perf-label">Taux Récupération</span>
+              <span class="perf-value good">95%</span>
+              <span class="perf-trend up">+3%</span>
+            </div>
+            <div class="perf-item">
+              <span class="perf-label">Interventions</span>
+              <span class="perf-value">12</span>
+              <span class="perf-trend">stable</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

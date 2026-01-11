@@ -1,0 +1,139 @@
+<div class="login-page">
+  <!-- Background avec pattern ferme -->
+  <div class="background-pattern"></div>
+
+  <!-- Partie gauche - Branding -->
+  <div class="login-left">
+    <div class="branding">
+      <div class="logo-container">
+        <span class="logo-icon">🌾</span>
+        <h1 class="logo-text">SmartCow Farm</h1>
+      </div>
+      <p class="tagline">Gestion Intelligente du Troupeau</p>
+
+      <div class="features">
+        <div class="feature-item">
+          <span class="feature-icon">🐄</span>
+          <div class="feature-text">
+            <h3>Suivi en Temps Réel</h3>
+            <p>Surveillez la santé de votre troupeau 24/7</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">🚨</span>
+          <div class="feature-text">
+            <h3>Alertes Intelligentes</h3>
+            <p>Soyez prévenu instantanément des anomalies</p>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">📊</span>
+          <div class="feature-text">
+            <h3>Analyses Avancées</h3>
+            <p>Prenez de meilleures décisions avec l'IA</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-info">
+        <p>🌱 Une ferme connectée pour un avenir durable</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Partie droite - Formulaire de connexion -->
+  <div class="login-right">
+    <div class="login-card">
+      <div class="card-header">
+        <div class="welcome-icon">👋</div>
+        <h2>Bienvenue !</h2>
+        <p>Connectez-vous pour accéder à votre ferme intelligente</p>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email">
+            <span class="label-icon">📧</span>
+            Adresse email
+          </label>
+          <div class="input-wrapper">
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="admin@smartcow.com"
+              [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+            />
+<span class="input-icon">📧</span>
+          </div>
+          <div
+            class="field-error"
+            *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            <span *ngIf="loginForm.get('email')?.errors?.['required']">
+              L'email est requis
+            </span>
+            <span *ngIf="loginForm.get('email')?.errors?.['email']">
+              Email invalide
+            </span>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password">
+            <span class="label-icon">🔒</span>
+            Mot de passe
+          </label>
+          <div class="input-wrapper">
+            <input
+              id="password"
+              type="password"
+              formControlName="password"
+              placeholder="••••••••"
+              [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+            />
+            <span class="input-icon">🔑</span>
+          </div>
+          <div
+            class="field-error"
+            *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            Le mot de passe est requis
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="alert-error" *ngIf="error">
+          <span class="alert-icon">⚠️</span>
+          <span>{{ error }}</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="loading || loginForm.invalid"
+          [class.loading]="loading">
+          <span class="btn-content" *ngIf="!loading">
+            <span class="btn-icon">🚀</span>
+            <span>Se connecter</span>
+          </span>
+          <span class="spinner" *ngIf="loading"></span>
+          <span *ngIf="loading">Connexion en cours...</span>
+        </button>
+      </form>
+
+      <!-- Footer Links -->
+      <div class="card-footer">
+        <p class="help-text">
+          Besoin d'aide ? Contactez votre administrateur
+        </p>
+        <div class="version">
+          SmartCow v1.0 • 2026
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
