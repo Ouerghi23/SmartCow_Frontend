@@ -14,15 +14,18 @@ import { UserDetailComponent } from './components/admin/users/user-detail/user-d
 import { UserEditComponent } from './components/admin/users/user-edit/user-edit.component';
 
 // Cow Management Components
+import { CowListComponent } from './components/admin/cows/cow-list/cow-list.component';
+import { CowCreateComponent } from './components/admin/cows/cow-create/cow-create.component';
+import { CowEditComponent } from './components/admin/cows/cow-edit/cow-edit.component';
 
 // Alert Management Components
 import { AlertListComponent } from './components/admin/alerts/alert-list/alert-list.component';
 
 // Agronome Components
 import { AgronomeDashboardComponent } from './components/agronome/dashboard/dashboard.component';
-import { CowListComponent } from './components/admin/cows/cow-list/cow-list.component';
-import { AdminDashboardComponent } from './components/admin/admin-dashboard/admin-dashboard.component';
 import { AdminLayoutComponent } from './components/admin/admin-layout/admin-layout.component';
+import { AdminDashboardComponent } from './components/admin/admin-dashboard/admin-dashboard.component';
+import { CowDetailComponent } from './components/admin/cows/cow-detail/cow-details.component';
 
 export const routes: Routes = [
   // Default redirect
@@ -82,7 +85,7 @@ export const routes: Routes = [
         data: { title: 'Modifier utilisateur' }
       },
 
-      // ========== COWS ==========
+      // ========== COWS (COMPLET) ==========
       {
         path: 'cows',
         component: CowListComponent,
@@ -90,17 +93,17 @@ export const routes: Routes = [
       },
       {
         path: 'cows/new',
-        component: CowListComponent, // TODO: Créer CowCreateComponent
+        component: CowCreateComponent,
         data: { title: 'Nouvelle vache' }
       },
       {
         path: 'cows/:id',
-        component: CowListComponent, // TODO: Créer CowDetailComponent
+        component: CowDetailComponent,
         data: { title: 'Fiche vache' }
       },
       {
         path: 'cows/:id/edit',
-        component: CowListComponent, // TODO: Créer CowEditComponent
+        component: CowEditComponent,
         data: { title: 'Modifier vache' }
       },
 

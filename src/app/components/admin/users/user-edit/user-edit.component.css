@@ -4,7 +4,7 @@
 
 /* === IMPORT COMMON STYLES === */
 /* Réutilise tous les styles du user-create */
-@import url('./../../user-create/user-create.component.css');
+@import url('../user-create/user-create.component.css');
 
 /* === ADDITIONAL STYLES FOR EDIT === */
 

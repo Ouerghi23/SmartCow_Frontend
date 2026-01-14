@@ -1,0 +1,197 @@
+<div class="cow-detail-page">
+  <!-- Header -->
+  <div class="page-header">
+    <button class="btn-back" routerLink="/admin/cows">
+      ← Retour au troupeau
+    </button>
+    <div class="header-actions">
+      <button
+        *ngIf="cow"
+        class="btn-action btn-pdf"
+        (click)="exportToPDF()">
+        📄 Exporter PDF
+      </button>
+      <button
+        *ngIf="cow"
+        class="btn-action btn-edit"
+        [routerLink]="['/admin/cows', cowId, 'edit']">
+        ✏️ Modifier
+      </button>
+      <button
+        *ngIf="cow"
+        class="btn-action btn-toggle"
+        (click)="toggleCowStatus()">
+        {{ cow.is_active ? '🔒 Désactiver' : '🔓 Activer' }}
+      </button>
+      <button
+        *ngIf="cow"
+        class="btn-action btn-delete"
+        (click)="deleteCow()">
+        🗑️ Supprimer
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des détails...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="errorMessage && !loading" class="error-container">
+    <div class="error-icon">❌</div>
+    <h2>{{ errorMessage }}</h2>
+    <button class="btn-retry" (click)="loadCow()">
+      🔄 Réessayer
+    </button>
+  </div>
+
+  <!-- Cow Details -->
+  <div *ngIf="cow && !loading" class="cow-details">
+
+    <!-- Profile Card -->
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-photo">
+          <img *ngIf="hasPhoto()" [src]="cow.photo_url" [alt]="cow.name" class="cow-photo" />
+          <div *ngIf="!hasPhoto()" class="cow-placeholder">
+            {{ getCowInitials() }}
+          </div>
+        </div>
+        <div class="profile-info">
+          <h1 class="cow-name">{{ cow.name }}</h1>
+          <p class="cow-tag">🏷️ {{ cow.tag_id }}</p>
+          <div class="cow-badges">
+            <span class="breed-badge" *ngIf="cow.breed">
+              🐄 {{ cow.breed }}
+            </span>
+            <span [class]="'status-badge ' + getStatusClass()">
+              {{ getStatusLabel() }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="details-grid">
+
+      <!-- Identification -->
+      <div class="detail-card">
+        <h2 class="card-title">🐄 Identification</h2>
+        <div class="detail-list">
+          <div class="detail-item">
+            <span class="detail-label">Nom</span>
+            <span class="detail-value">{{ cow.name }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Tag ID (Boucle)</span>
+            <span class="detail-value tag-id">{{ cow.tag_id }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Race</span>
+            <span class="detail-value">{{ cow.breed || 'Non spécifiée' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">ID Système</span>
+            <span class="detail-value">#{{ cow.id }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caractéristiques -->
+      <div class="detail-card">
+        <h2 class="card-title">📏 Caractéristiques</h2>
+        <div class="detail-list">
+          <div class="detail-item">
+            <span class="detail-label">Date de naissance</span>
+            <span class="detail-value">{{ formatDate(cow.birth_date) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Âge</span>
+            <span class="detail-value age-value">📅 {{ getAge() }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Poids</span>
+            <span class="detail-value">
+              {{ cow.weight ? (cow.weight + ' kg') : 'Non renseigné' }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Statut</span>
+            <span [class]="'status-indicator ' + getStatusClass()">
+              {{ getStatusIcon() }} {{ cow.is_active ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- État de santé -->
+      <div class="detail-card health-card">
+        <h2 class="card-title">🏥 État de santé</h2>
+        <div class="health-score-display" [ngClass]="getHealthScoreClass()">
+          <div class="health-icon">{{ getHealthScoreIcon() }}</div>
+          <div class="health-info">
+            <div class="health-value">{{ cow.health_score }}/100</div>
+            <div class="health-label">{{ getHealthScoreLabel() }}</div>
+          </div>
+          <div class="health-bar">
+            <div class="health-progress" [style.width.%]="cow.health_score"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historique -->
+      <div class="detail-card">
+        <h2 class="card-title">📅 Historique</h2>
+        <div class="detail-list">
+          <div class="detail-item">
+            <span class="detail-label">Ajoutée le</span>
+            <span class="detail-value">{{ formatDateTime(cow.created_at) }}</span>
+          </div>
+          <div class="detail-item" *ngIf="cow.updated_at">
+            <span class="detail-label">Dernière modification</span>
+            <span class="detail-value">{{ formatDateTime(cow.updated_at) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Dans le système depuis</span>
+            <span class="detail-value">{{ getAge() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="detail-card notes-card" *ngIf="cow.notes">
+        <h2 class="card-title">📝 Notes et observations</h2>
+        <div class="notes-content">
+          {{ cow.notes }}
+        </div>
+      </div>
+
+      <!-- Photo (if not already shown in profile) -->
+      <div class="detail-card photo-card" *ngIf="hasPhoto()">
+        <h2 class="card-title">📷 Photo</h2>
+        <div class="photo-display">
+          <img [src]="cow.photo_url" [alt]="cow.name" class="cow-photo-large" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Zone -->
+    <div class="action-zone">
+      <div class="action-card danger">
+        <h3>⚠️ Zone de danger</h3>
+        <p>Les actions suivantes sont irréversibles. Procédez avec précaution.</p>
+        <div class="danger-actions">
+          <button class="btn-danger" (click)="toggleCowStatus()">
+            {{ cow.is_active ? '🔒 Retirer du troupeau' : '🔓 Réintégrer au troupeau' }}
+          </button>
+          <button class="btn-danger" (click)="deleteCow()">
+            🗑️ Supprimer définitivement
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

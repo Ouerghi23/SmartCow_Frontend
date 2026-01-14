@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { UserService, UserStats } from '../../../services/user.service';
 import { CowService, CowStats } from '../../../services/cow.service';
 import { AlertService, AlertStats, Alert, AlertSeverity } from '../../../services/alert.service';
@@ -29,30 +30,57 @@ export class AdminDashboardComponent implements OnInit {
   recentAlerts: Alert[] = [];
   loading = true;
   currentUser: any;
+  error = '';
 
   constructor(
     private userService: UserService,
     private cowService: CowService,
     private alertService: AlertService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {
     this.currentUser = this.authService.currentUserValue;
   }
 
   ngOnInit(): void {
     this.loadDashboardData();
+
+    // 🔄 Rafraîchir les données quand on navigue vers le dashboard
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      if (this.router.url.includes('/admin/dashboard') || this.router.url === '/admin') {
+        console.log('🔄 Dashboard visible - Rafraîchissement des données...');
+        this.refreshData();
+      }
+    });
   }
 
   loadDashboardData(): void {
     this.loading = true;
+    this.error = '';
+    let loadedCount = 0;
+    const totalLoads = 4;
+
+    const checkAllLoaded = () => {
+      loadedCount++;
+      if (loadedCount >= totalLoads) {
+        this.loading = false;
+        console.log('✅ Toutes les données chargées:', this.stats);
+      }
+    };
 
     // Charger les stats utilisateurs
     this.userService.getUserStats().subscribe({
       next: (data) => {
         this.stats.users = data;
         console.log('✅ User stats loaded:', data);
+        checkAllLoaded();
       },
-      error: (err) => console.error('❌ Error loading user stats:', err)
+      error: (err) => {
+        console.error('❌ Error loading user stats:', err);
+        checkAllLoaded();
+      }
     });
 
     // Charger les stats vaches
@@ -60,8 +88,14 @@ export class AdminDashboardComponent implements OnInit {
       next: (data) => {
         this.stats.cows = data;
         console.log('✅ Cow stats loaded:', data);
+        console.log('📊 Total cows:', data?.total_cows);
+        checkAllLoaded();
       },
-      error: (err) => console.error('❌ Error loading cow stats:', err)
+      error: (err) => {
+        console.error('❌ Error loading cow stats:', err);
+        this.error = 'Erreur lors du chargement des statistiques des vaches';
+        checkAllLoaded();
+      }
     });
 
     // Charger les stats alertes
@@ -69,24 +103,28 @@ export class AdminDashboardComponent implements OnInit {
       next: (data) => {
         this.stats.alerts = data;
         console.log('✅ Alert stats loaded:', data);
+        checkAllLoaded();
       },
-      error: (err) => console.error('❌ Error loading alert stats:', err)
+      error: (err) => {
+        console.error('❌ Error loading alert stats:', err);
+        checkAllLoaded();
+      }
     });
 
     // Charger les alertes récentes
     this.alertService.getAlerts({
       page: 1,
       page_size: 5,
-      status: undefined // Toutes les alertes non résolues
+      status: undefined
     }).subscribe({
       next: (response) => {
         this.recentAlerts = response.alerts;
         console.log('✅ Recent alerts loaded:', response.alerts);
-        this.loading = false;
+        checkAllLoaded();
       },
       error: (err) => {
         console.error('❌ Error loading recent alerts:', err);
-        this.loading = false;
+        checkAllLoaded();
       }
     });
   }
@@ -121,6 +159,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   refreshData(): void {
+    console.log('🔄 Rafraîchissement manuel des données...');
     this.loadDashboardData();
   }
 }

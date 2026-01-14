@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Cow {
@@ -40,7 +41,9 @@ export interface CowStats {
 export class CowService {
   private apiUrl = `${environment.apiUrl}/cows`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    console.log('🐄 CowService initialized with API URL:', this.apiUrl);
+  }
 
   /**
    * Récupérer toutes les vaches avec pagination et filtres
@@ -60,35 +63,79 @@ export class CowService {
       if (params.search) httpParams = httpParams.set('search', params.search);
     }
 
-    return this.http.get<CowListResponse>(this.apiUrl, { params: httpParams });
+    console.log('🔎 Fetching cows with params:', params);
+
+    return this.http.get<CowListResponse>(this.apiUrl, { params: httpParams }).pipe(
+      tap(response => console.log('✅ Cows fetched:', response)),
+      catchError(error => {
+        console.error('❌ Error fetching cows:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
    * Récupérer une vache par ID
    */
   getCow(id: number): Observable<Cow> {
-    return this.http.get<Cow>(`${this.apiUrl}/${id}`);
+    console.log('🔎 Fetching cow with ID:', id);
+
+    return this.http.get<Cow>(`${this.apiUrl}/${id}`).pipe(
+      tap(cow => console.log('✅ Cow fetched:', cow)),
+      catchError(error => {
+        console.error('❌ Error fetching cow:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
    * Créer une nouvelle vache
    */
   createCow(cowData: Partial<Cow>): Observable<Cow> {
-    return this.http.post<Cow>(this.apiUrl, cowData);
+    console.log('➕ Creating cow:', cowData);
+
+    return this.http.post<Cow>(this.apiUrl, cowData).pipe(
+      tap(cow => {
+        console.log('✅ Cow created:', cow);
+        // Notification de succès
+        console.log('🔄 Cow created - stats should be refreshed');
+      }),
+      catchError(error => {
+        console.error('❌ Error creating cow:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
    * Mettre à jour une vache
    */
   updateCow(id: number, cowData: Partial<Cow>): Observable<Cow> {
-    return this.http.put<Cow>(`${this.apiUrl}/${id}`, cowData);
+    console.log('📝 Updating cow:', id, cowData);
+
+    return this.http.put<Cow>(`${this.apiUrl}/${id}`, cowData).pipe(
+      tap(cow => console.log('✅ Cow updated:', cow)),
+      catchError(error => {
+        console.error('❌ Error updating cow:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
    * Supprimer une vache
    */
   deleteCow(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    console.log('🗑️ Deleting cow:', id);
+
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      tap(() => console.log('✅ Cow deleted')),
+      catchError(error => {
+        console.error('❌ Error deleting cow:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
@@ -99,13 +146,71 @@ export class CowService {
     health_score: number;
     status: string;
   }> {
-    return this.http.get<any>(`${this.apiUrl}/${id}/health-score`);
+    console.log('🏥 Fetching health score for cow:', id);
+
+    return this.http.get<any>(`${this.apiUrl}/${id}/health-score`).pipe(
+      tap(score => console.log('✅ Health score fetched:', score)),
+      catchError(error => {
+        console.error('❌ Error fetching health score:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
    * Récupérer les statistiques des vaches
+   *
+   * ⚠️ IMPORTANT: Vérifiez que l'endpoint backend correspond !
+   * Options possibles :
+   * - /api/cows/stats (Django standard)
+   * - /api/cows/stats/overview
+   *
+   * Testez dans votre navigateur ou avec curl :
+   * curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:8000/api/cows/stats
    */
   getCowStats(): Observable<CowStats> {
-    return this.http.get<CowStats>(`${this.apiUrl}/stats/overview`);
+    // 🔧 CORRECTION : Essayez d'abord sans /overview
+    const endpoint = `${this.apiUrl}/stats`;
+ 
+    console.log('📊 Fetching cow stats from:', endpoint);
+
+    return this.http.get<CowStats>(endpoint).pipe(
+      tap(stats => {
+        console.log('✅ Cow stats fetched:', stats);
+        console.log('📊 Total cows:', stats.total_cows);
+        console.log('📊 Active cows:', stats.active_cows);
+      }),
+      catchError(error => {
+        console.error('❌ Error fetching cow stats:', error);
+        console.error('❌ Endpoint tried:', endpoint);
+        console.error('❌ Error details:', {
+          status: error.status,
+          message: error.message,
+          url: error.url
+        });
+
+        // Si l'endpoint ne fonctionne pas, essayer avec /overview
+        if (error.status === 404) {
+          console.log('🔄 Trying alternative endpoint: /stats/overview');
+          return this.http.get<CowStats>(`${this.apiUrl}/stats/overview`).pipe(
+            tap(stats => console.log('✅ Cow stats fetched (alternative):', stats)),
+            catchError(altError => {
+              console.error('❌ Alternative endpoint also failed:', altError);
+              return throwError(() => altError);
+            })
+          );
+        }
+
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * 🆕 Méthode pour forcer le rechargement du cache (si nécessaire)
+   */
+  clearCache(): void {
+    console.log('🧹 Clearing cow service cache');
+    // Implémentez ici si vous avez un cache
   }
 }

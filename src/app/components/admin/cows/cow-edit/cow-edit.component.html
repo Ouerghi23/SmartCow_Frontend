@@ -1,0 +1,250 @@
+<div class="cow-edit-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" [routerLink]="['/admin/cows', cowId]">
+        ← Retour aux détails
+      </button>
+      <h1>✏️ Modifier la vache</h1>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    ✅ {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    ❌ {{ errorMessage }}
+  </div>
+
+  <!-- Loading Data -->
+  <div *ngIf="loadingData" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des données...</p>
+  </div>
+
+  <!-- Form -->
+  <div *ngIf="!loadingData" class="form-container">
+    <form [formGroup]="cowForm" (ngSubmit)="onSubmit()">
+
+      <!-- Section: Identification -->
+      <div class="form-section">
+        <h2 class="section-title">🐄 Identification</h2>
+
+        <div class="form-row">
+          <!-- Name -->
+          <div class="form-group">
+            <label for="name">
+              Nom <span class="required">*</span>
+            </label>
+            <input
+              id="name"
+              type="text"
+              formControlName="name"
+              placeholder="Ex: Marguerite"
+              [class.invalid]="isFieldInvalid('name')"
+            />
+            <span *ngIf="isFieldInvalid('name')" class="error-message">
+              {{ getFieldError('name') }}
+            </span>
+          </div>
+
+          <!-- Tag ID -->
+          <div class="form-group">
+            <label for="tag_id">
+              Numéro de boucle (Tag ID) <span class="required">*</span>
+            </label>
+            <input
+              id="tag_id"
+              type="text"
+              formControlName="tag_id"
+              placeholder="Ex: FR-12345-6789"
+              [class.invalid]="isFieldInvalid('tag_id')"
+            />
+            <span *ngIf="isFieldInvalid('tag_id')" class="error-message">
+              {{ getFieldError('tag_id') }}
+            </span>
+            <small class="form-hint">
+              Identifiant unique de la vache (boucle auriculaire)
+            </small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <!-- Breed -->
+          <div class="form-group">
+            <label for="breed">
+              Race
+            </label>
+            <select
+              id="breed"
+              formControlName="breed"
+              [class.invalid]="isFieldInvalid('breed')">
+              <option value="">Sélectionner une race</option>
+              <option *ngFor="let breed of breeds" [value]="breed">
+                {{ breed }}
+              </option>
+            </select>
+            <span *ngIf="isFieldInvalid('breed')" class="error-message">
+              {{ getFieldError('breed') }}
+            </span>
+          </div>
+
+          <!-- Birth Date -->
+          <div class="form-group">
+            <label for="birth_date">
+              Date de naissance
+            </label>
+            <input
+              id="birth_date"
+              type="date"
+              formControlName="birth_date"
+              [class.invalid]="isFieldInvalid('birth_date')"
+            />
+            <span *ngIf="isFieldInvalid('birth_date')" class="error-message">
+              {{ getFieldError('birth_date') }}
+            </span>
+            <small *ngIf="cowForm.get('birth_date')?.value" class="form-hint age-hint">
+              📅 Âge: {{ getEstimatedAge() }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Caractéristiques physiques -->
+      <div class="form-section">
+        <h2 class="section-title">📏 Caractéristiques physiques</h2>
+
+        <div class="form-row">
+          <!-- Weight -->
+          <div class="form-group">
+            <label for="weight">
+              Poids (kg)
+            </label>
+            <input
+              id="weight"
+              type="number"
+              step="0.1"
+              formControlName="weight"
+              placeholder="Ex: 650"
+              [class.invalid]="isFieldInvalid('weight')"
+            />
+            <span *ngIf="isFieldInvalid('weight')" class="error-message">
+              {{ getFieldError('weight') }}
+            </span>
+          </div>
+
+          <!-- Photo URL -->
+          <div class="form-group">
+            <label for="photo_url">
+              Photo (URL)
+            </label>
+            <input
+              id="photo_url"
+              type="url"
+              formControlName="photo_url"
+              placeholder="https://exemple.com/photo.jpg"
+              [class.invalid]="isFieldInvalid('photo_url')"
+            />
+            <span *ngIf="isFieldInvalid('photo_url')" class="error-message">
+              {{ getFieldError('photo_url') }}
+            </span>
+            <small class="form-hint">
+              Lien vers la photo de la vache
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: État de santé -->
+      <div class="form-section">
+        <h2 class="section-title">🏥 État de santé</h2>
+
+        <div class="form-row">
+          <!-- Health Score -->
+          <div class="form-group">
+            <label for="health_score">
+              Score de santé <span class="required">*</span>
+            </label>
+            <div class="health-score-wrapper">
+              <input
+                id="health_score"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                formControlName="health_score"
+                class="health-slider"
+              />
+              <div class="health-display" [ngClass]="getHealthScoreClass()">
+                <span class="health-value">{{ cowForm.get('health_score')?.value }}</span>
+                <span class="health-label">{{ getHealthScoreLabel() }}</span>
+              </div>
+            </div>
+            <small class="form-hint">
+              0-100 (100 = santé parfaite)
+            </small>
+          </div>
+
+          <!-- Is Active -->
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                formControlName="is_active"
+                class="checkbox-input"
+              />
+              <span class="checkbox-text">✅ Vache active dans le troupeau</span>
+            </label>
+            <small class="form-hint">
+              Une vache inactive n'apparaît pas dans les listes principales
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Notes -->
+      <div class="form-section">
+        <h2 class="section-title">📝 Notes et observations</h2>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="notes">
+              Notes
+            </label>
+            <textarea
+              id="notes"
+              formControlName="notes"
+              rows="5"
+              placeholder="Notes sur la vache (historique médical, comportement, etc.)"
+              [class.invalid]="isFieldInvalid('notes')">
+            </textarea>
+            <span *ngIf="isFieldInvalid('notes')" class="error-message">
+              {{ getFieldError('notes') }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="onCancel()"
+          [disabled]="loading">
+          ❌ Annuler
+        </button>
+
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="loading || cowForm.invalid">
+          <span *ngIf="!loading">💾 Enregistrer les modifications</span>
+          <span *ngIf="loading">⏳ Enregistrement...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
