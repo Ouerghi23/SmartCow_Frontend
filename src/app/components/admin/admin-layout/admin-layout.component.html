@@ -1,0 +1,80 @@
+<div class="admin-layout" [class.sidebar-collapsed]="sidebarCollapsed">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <!-- Logo & Branding -->
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">🌾</span>
+        <span class="logo-text" *ngIf="!sidebarCollapsed">SmartCow</span>
+      </div>
+      <button class="btn-toggle" (click)="toggleSidebar()" title="Toggle sidebar">
+        {{ sidebarCollapsed ? '→' : '←' }}
+      </button>
+    </div>
+
+    <!-- User Info -->
+    <div class="user-info" *ngIf="!sidebarCollapsed">
+      <div class="user-avatar">
+        {{ currentUser?.full_name?.charAt(0).toUpperCase() }}
+      </div>
+      <div class="user-details">
+        <strong>{{ currentUser?.full_name }}</strong>
+        <span class="user-role">{{ currentUser?.role }}</span>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="sidebar-nav">
+      <a
+        *ngFor="let item of menuItems"
+        [routerLink]="item.route"
+        class="nav-item"
+        [class.active]="isActive(item.route)"
+        [title]="item.label">
+
+        <span class="nav-icon">{{ item.icon }}</span>
+        <span class="nav-label" *ngIf="!sidebarCollapsed">{{ item.label }}</span>
+        <span
+          *ngIf="item.badge && item.badge > 0 && !sidebarCollapsed"
+          [class]="'nav-badge ' + (item.badgeClass || 'badge-primary')">
+          {{ item.badge }}
+        </span>
+      </a>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <button class="btn-logout" (click)="logout()" [title]="sidebarCollapsed ? 'Déconnexion' : ''">
+        <span class="logout-icon">🚪</span>
+        <span class="logout-text" *ngIf="!sidebarCollapsed">Déconnexion</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn-menu-mobile" (click)="toggleSidebar()">
+          ☰
+        </button>
+        <h2 class="page-title">Espace Administrateur</h2>
+      </div>
+
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="user-avatar-small">
+            {{ currentUser?.full_name?.charAt(0).toUpperCase() }}
+          </div>
+          <span class="user-name">{{ currentUser?.full_name }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="content-wrapper">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>

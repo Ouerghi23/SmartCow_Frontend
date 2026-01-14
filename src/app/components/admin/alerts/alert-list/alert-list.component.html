@@ -1,0 +1,200 @@
+<div class="alert-list-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>🚨 Gestion des Alertes</h1>
+      <p>{{ totalAlerts }} alerte(s) au total</p>
+    </div>
+    <div class="header-actions">
+      <button (click)="loadAlerts()" class="btn-refresh" [disabled]="loading">
+        🔄 Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-card">
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>🔍 Vache ID</label>
+        <input
+          type="number"
+          [(ngModel)]="searchCowId"
+          placeholder="ID de la vache..."
+          class="filter-input"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>📊 Sévérité</label>
+        <select [(ngModel)]="selectedSeverity" class="filter-select">
+          <option value="ALL">Toutes</option>
+          <option value="CRITICAL">🔴 Critique</option>
+          <option value="WARNING">⚠️ Avertissement</option>
+          <option value="INFO">ℹ️ Info</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>🎯 Statut</label>
+        <select [(ngModel)]="selectedStatus" class="filter-select">
+          <option value="ALL">Tous</option>
+          <option value="NEW">🆕 Nouvelles</option>
+          <option value="ACKNOWLEDGED">👁️ Acquittées</option>
+          <option value="IN_PROGRESS">⏳ En cours</option>
+          <option value="RESOLVED">✅ Résolues</option>
+          <option value="ESCALATED">🚨 Escaladées</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>🏷️ Type</label>
+        <select [(ngModel)]="selectedType" class="filter-select">
+          <option value="ALL">Tous</option>
+          <option value="TEMPERATURE">🌡️ Température</option>
+          <option value="HEART_RATE">💓 Rythme cardiaque</option>
+          <option value="INACTIVITY">😴 Inactivité</option>
+          <option value="BATTERY">🔋 Batterie</option>
+          <option value="PREDICTION">🤖 Prédiction</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <button (click)="applyFilters()" class="btn-apply-filters">
+          🔍 Appliquer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des alertes...</p>
+  </div>
+
+  <!-- Alerts List -->
+  <div *ngIf="!loading" class="alerts-container">
+    <div *ngFor="let alert of filteredAlerts"
+         class="alert-card"
+         [class]="getSeverityClass(alert.severity)">
+
+      <!-- Alert Header -->
+      <div class="alert-header">
+        <div class="alert-icon">
+          {{ getSeverityIcon(alert.severity) }}
+        </div>
+        <div class="alert-title">
+          <h3>{{ getTypeLabel(alert.type) }}</h3>
+          <span class="alert-id">Alerte #{{ alert.id }}</span>
+        </div>
+        <div class="alert-badges">
+          <span [class]="getStatusClass(alert.status)" class="status-badge">
+            {{ getStatusLabel(alert.status) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Alert Content -->
+      <div class="alert-content">
+        <div class="alert-info-grid">
+          <div class="info-item">
+            <span class="info-label">🐄 Vache ID:</span>
+            <span class="info-value">{{ alert.cow_id }}</span>
+          </div>
+
+          <div class="info-item" *ngIf="alert.measured_value !== null">
+            <span class="info-label">📊 Valeur mesurée:</span>
+            <span class="info-value">{{ alert.measured_value }}</span>
+          </div>
+
+          <div class="info-item" *ngIf="alert.threshold_value !== null">
+            <span class="info-label">⚠️ Seuil:</span>
+            <span class="info-value">{{ alert.threshold_value }}</span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">📅 Date:</span>
+            <span class="info-value">{{ alert.created_at | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+
+        <div class="alert-message">
+          <strong>Message:</strong> {{ alert.message }}
+        </div>
+
+        <!-- Acknowledged Info -->
+        <div *ngIf="alert.acknowledged_at" class="alert-meta">
+          <p>👁️ Acquittée le {{ alert.acknowledged_at | date: 'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+
+        <!-- Resolved Info -->
+        <div *ngIf="alert.resolved_at" class="alert-meta resolved">
+          <p>✅ Résolue le {{ alert.resolved_at | date: 'dd/MM/yyyy HH:mm' }}</p>
+          <p *ngIf="alert.resolution_notes"><strong>Notes:</strong> {{ alert.resolution_notes }}</p>
+        </div>
+      </div>
+
+      <!-- Alert Actions -->
+      <div class="alert-actions">
+        <button
+          [routerLink]="['/admin/alerts', alert.id]"
+          class="btn-action view"
+          title="Voir détails">
+          👁️ Détails
+        </button>
+
+        <button
+          *ngIf="canAcknowledge(alert)"
+          (click)="acknowledgeAlert(alert)"
+          class="btn-action acknowledge"
+          title="Acquitter">
+          ✓ Acquitter
+        </button>
+
+        <button
+          *ngIf="canResolve(alert)"
+          (click)="resolveAlert(alert)"
+          class="btn-action resolve"
+          title="Résoudre">
+          ✅ Résoudre
+        </button>
+
+        <button
+          (click)="deleteAlert(alert)"
+          class="btn-action delete"
+          title="Supprimer">
+          🗑️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredAlerts.length === 0" class="empty-state">
+    <div class="empty-icon">🎉</div>
+    <p>Aucune alerte trouvée</p>
+    <small>Tout va bien dans votre ferme !</small>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && totalAlerts > pageSize" class="pagination">
+    <button
+      class="btn-page"
+      (click)="previousPage()"
+      [disabled]="currentPage === 1">
+      ← Précédent
+    </button>
+
+    <span class="page-info">
+      Page {{ currentPage }} sur {{ totalPages }} ({{ totalAlerts }} alerte(s))
+    </span>
+
+    <button
+      class="btn-page"
+      (click)="nextPage()"
+      [disabled]="currentPage >= totalPages">
+      Suivant →
+    </button>
+  </div>
+</div>

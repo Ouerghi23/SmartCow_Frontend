@@ -1,0 +1,198 @@
+<div class="user-create-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="onCancel()">
+        ← Retour
+      </button>
+      <h1>➕ Créer un nouvel utilisateur</h1>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    ✅ {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    ❌ {{ errorMessage }}
+  </div>
+
+  <!-- Form -->
+  <div class="form-container">
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+
+      <!-- Section: Informations de connexion -->
+      <div class="form-section">
+        <h2 class="section-title">🔐 Informations de connexion</h2>
+
+        <div class="form-row">
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email">
+              Email <span class="required">*</span>
+            </label>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="exemple@smartcow.com"
+              [class.invalid]="isFieldInvalid('email')"
+            />
+            <span *ngIf="isFieldInvalid('email')" class="error-message">
+              {{ getFieldError('email') }}
+            </span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password">
+              Mot de passe <span class="required">*</span>
+            </label>
+            <div class="password-wrapper">
+              <input
+                id="password"
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Minimum 6 caractères"
+                [class.invalid]="isFieldInvalid('password')"
+              />
+              <button
+                type="button"
+                class="btn-toggle-password"
+                (click)="togglePasswordVisibility()">
+                {{ showPassword ? '🙈' : '👁️' }}
+              </button>
+            </div>
+            <span *ngIf="isFieldInvalid('password')" class="error-message">
+              {{ getFieldError('password') }}
+            </span>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="form-group">
+            <label for="confirmPassword">
+              Confirmer le mot de passe <span class="required">*</span>
+            </label>
+            <input
+              id="confirmPassword"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="confirmPassword"
+              placeholder="Retaper le mot de passe"
+              [class.invalid]="isFieldInvalid('confirmPassword') || hasPasswordMismatch()"
+            />
+            <span *ngIf="isFieldInvalid('confirmPassword')" class="error-message">
+              {{ getFieldError('confirmPassword') }}
+            </span>
+            <span *ngIf="hasPasswordMismatch()" class="error-message">
+              Les mots de passe ne correspondent pas
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Informations personnelles -->
+      <div class="form-section">
+        <h2 class="section-title">👤 Informations personnelles</h2>
+
+        <div class="form-row">
+          <!-- Full Name -->
+          <div class="form-group">
+            <label for="full_name">
+              Nom complet <span class="required">*</span>
+            </label>
+            <input
+              id="full_name"
+              type="text"
+              formControlName="full_name"
+              placeholder="Jean Dupont"
+              [class.invalid]="isFieldInvalid('full_name')"
+            />
+            <span *ngIf="isFieldInvalid('full_name')" class="error-message">
+              {{ getFieldError('full_name') }}
+            </span>
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group">
+            <label for="phone">
+              Téléphone
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              formControlName="phone"
+              placeholder="+216 12 345 678"
+              [class.invalid]="isFieldInvalid('phone')"
+            />
+            <span *ngIf="isFieldInvalid('phone')" class="error-message">
+              {{ getFieldError('phone') }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Rôle et statut -->
+      <div class="form-section">
+        <h2 class="section-title">⚙️ Rôle et statut</h2>
+
+        <div class="form-row">
+          <!-- Role -->
+          <div class="form-group">
+            <label for="role">
+              Rôle <span class="required">*</span>
+            </label>
+            <div class="role-selector">
+              <div
+                *ngFor="let role of roles"
+                class="role-option"
+                [class.selected]="userForm.get('role')?.value === role.value"
+                (click)="userForm.patchValue({ role: role.value })">
+                <div class="role-icon">{{ role.icon }}</div>
+                <div class="role-label">{{ role.label }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <!-- Is Active -->
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                formControlName="is_active"
+                class="checkbox-input"
+              />
+              <span class="checkbox-text">✅ Compte actif</span>
+            </label>
+            <small class="form-hint">
+              Un compte inactif ne peut pas se connecter
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn-cancel"
+          (click)="onCancel()"
+          [disabled]="loading">
+          ❌ Annuler
+        </button>
+
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="loading || userForm.invalid">
+          <span *ngIf="!loading">✅ Créer l'utilisateur</span>
+          <span *ngIf="loading">⏳ Création en cours...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

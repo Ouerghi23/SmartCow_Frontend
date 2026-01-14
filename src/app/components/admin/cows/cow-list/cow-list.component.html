@@ -1,0 +1,156 @@
+<div class="cow-list-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>🐄 Gestion du Troupeau</h1>
+      <p>{{ totalCows }} vache(s) au total</p>
+    </div>
+    <div class="header-actions">
+      <button routerLink="/admin/cows/new" class="btn-primary">
+        ➕ Nouvelle vache
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-card">
+    <div class="filter-group">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="filterCows()"
+        placeholder="🔍 Rechercher par nom ou ID tag..."
+        class="search-input"
+      />
+    </div>
+
+    <div class="filter-group">
+      <select [(ngModel)]="selectedStatus" (change)="filterCows()" class="status-select">
+        <option value="ALL">📊 Tous les statuts</option>
+        <option value="ACTIVE">✅ Actives</option>
+        <option value="INACTIVE">❌ Inactives</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement du troupeau...</p>
+  </div>
+
+  <!-- Cows Grid -->
+  <div *ngIf="!loading" class="cows-grid">
+    <div *ngFor="let cow of filteredCows" class="cow-card" [class.inactive]="!cow.is_active">
+
+      <!-- Cow Image -->
+      <div class="cow-image">
+        <img
+          [src]="cow.photo_url || 'assets/images/cow-placeholder.png'"
+          [alt]="cow.name"
+          (error)="$any($event.target).src='assets/images/cow-placeholder.png'"
+        />
+        <div class="cow-tag">{{ cow.tag_id }}</div>
+      </div>
+
+      <!-- Cow Info -->
+      <div class="cow-info">
+        <h3 class="cow-name">{{ cow.name }}</h3>
+
+        <div class="cow-details">
+          <div class="detail-row">
+            <span class="detail-label">🏷️ ID Tag:</span>
+            <span class="detail-value">{{ cow.tag_id }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">🐮 Race:</span>
+            <span class="detail-value">{{ cow.breed || 'Non spécifiée' }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">📅 Âge:</span>
+            <span class="detail-value">{{ getAgeDisplay(cow.age_years) }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">⚖️ Poids:</span>
+            <span class="detail-value">{{ cow.weight ? cow.weight + ' kg' : 'N/A' }}</span>
+          </div>
+        </div>
+
+        <!-- Health Score -->
+        <div class="health-score" [class]="getHealthScoreClass(cow.health_score)">
+          <span class="health-icon">{{ getHealthScoreIcon(cow.health_score) }}</span>
+          <div class="health-info">
+            <span class="health-label">Santé</span>
+            <div class="health-bar">
+              <div class="health-fill" [style.width.%]="cow.health_score"></div>
+            </div>
+            <span class="health-value">{{ cow.health_score }}%</span>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="cow-status">
+          <span class="status-badge" [class.active]="cow.is_active">
+            {{ cow.is_active ? '✅ Active' : '❌ Inactive' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="cow-actions">
+        <button
+          [routerLink]="['/admin/cows', cow.id]"
+          class="btn-action view"
+          title="Voir détails">
+          👁️
+        </button>
+        <button
+          [routerLink]="['/admin/cows', cow.id, 'edit']"
+          class="btn-action edit"
+          title="Modifier">
+          ✏️
+        </button>
+        <button
+          (click)="deleteCow(cow)"
+          class="btn-action delete"
+          title="Supprimer">
+          🗑️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredCows.length === 0" class="empty-state">
+    <div class="empty-icon">🐄</div>
+    <p>Aucune vache trouvée</p>
+    <small>Essayez de modifier vos critères de recherche ou ajoutez une nouvelle vache</small>
+    <button routerLink="/admin/cows/new" class="btn-empty-action">
+      ➕ Ajouter une vache
+    </button>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && totalCows > pageSize" class="pagination">
+    <button
+      class="btn-page"
+      (click)="previousPage()"
+      [disabled]="currentPage === 1">
+      ← Précédent
+    </button>
+
+    <span class="page-info">
+      Page {{ currentPage }} sur {{ totalPages }} ({{ totalCows }} vache(s))
+    </span>
+
+    <button
+      class="btn-page"
+      (click)="nextPage()"
+      [disabled]="currentPage >= totalPages">
+      Suivant →
+    </button>
+  </div>
+</div>

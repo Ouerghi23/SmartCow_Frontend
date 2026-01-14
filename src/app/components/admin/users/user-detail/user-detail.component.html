@@ -1,0 +1,191 @@
+<div class="user-detail-page">
+  <!-- Header -->
+  <div class="page-header">
+    <button class="btn-back" routerLink="/admin/users">
+      ← Retour à la liste
+    </button>
+    <div class="header-actions">
+      <button
+        *ngIf="user"
+        class="btn-action btn-edit"
+        [routerLink]="['/admin/users', userId, 'edit']">
+        ✏️ Modifier
+      </button>
+      <button
+        *ngIf="user"
+        class="btn-action btn-toggle"
+        (click)="toggleUserStatus()">
+        {{ user.is_active ? '🔒 Désactiver' : '🔓 Activer' }}
+      </button>
+      <button
+        *ngIf="user"
+        class="btn-action btn-delete"
+        (click)="deleteUser()">
+        🗑️ Supprimer
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des détails...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="errorMessage && !loading" class="error-container">
+    <div class="error-icon">❌</div>
+    <h2>{{ errorMessage }}</h2>
+    <button class="btn-retry" (click)="loadUser()">
+      🔄 Réessayer
+    </button>
+  </div>
+
+  <!-- User Details -->
+  <div *ngIf="user && !loading" class="user-details">
+
+    <!-- Profile Card -->
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar">
+          {{ user.full_name.charAt(0).toUpperCase() }}
+        </div>
+        <div class="profile-info">
+          <h1 class="user-name">{{ user.full_name }}</h1>
+          <p class="user-email">{{ user.email }}</p>
+          <div class="user-badges">
+            <span [class]="'role-badge ' + getRoleBadgeClass(user.role)">
+              {{ getRoleIcon(user.role) }} {{ getRoleLabel(user.role) }}
+            </span>
+            <span [class]="'status-badge ' + (user.is_active ? 'active' : 'inactive')">
+              {{ user.is_active ? '✅ Actif' : '❌ Inactif' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="details-grid">
+
+      <!-- Contact Information -->
+      <div class="detail-card">
+        <h2 class="card-title">📞 Informations de contact</h2>
+        <div class="detail-list">
+          <div class="detail-item">
+            <span class="detail-label">Email</span>
+            <span class="detail-value">{{ user.email }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Téléphone</span>
+            <span class="detail-value">{{ user.phone || 'Non renseigné' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Information -->
+      <div class="detail-card">
+        <h2 class="card-title">👤 Informations du compte</h2>
+        <div class="detail-list">
+          <div class="detail-item">
+            <span class="detail-label">ID Utilisateur</span>
+            <span class="detail-value">#{{ user.id }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Rôle</span>
+            <span class="detail-value">
+              {{ getRoleIcon(user.role) }} {{ getRoleLabel(user.role) }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Statut</span>
+            <span [class]="'status-indicator ' + (user.is_active ? 'active' : 'inactive')">
+              {{ user.is_active ? '🟢 Actif' : '🔴 Inactif' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Information -->
+      <div class="detail-card">
+        <h2 class="card-title">📅 Activité</h2>
+        <div class="detail-list">
+          <div class="detail-item">
+            <span class="detail-label">Créé le</span>
+            <span class="detail-value">{{ formatDate(user.created_at) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Ancienneté</span>
+            <span class="detail-value">{{ getAccountAge() }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Dernière connexion</span>
+            <span class="detail-value">{{ formatDate(user.last_login) }}</span>
+          </div>
+          <div class="detail-item" *ngIf="user.updated_at">
+            <span class="detail-label">Modifié le</span>
+            <span class="detail-value">{{ formatDate(user.updated_at) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Permissions (based on role) -->
+      <div class="detail-card">
+        <h2 class="card-title">🔐 Permissions</h2>
+        <div class="permissions-list">
+          <div *ngIf="user.role === 'ADMIN'" class="permission-item granted">
+            ✅ Accès complet administrateur
+          </div>
+          <div *ngIf="user.role === 'ADMIN'" class="permission-item granted">
+            ✅ Gestion des utilisateurs
+          </div>
+          <div *ngIf="user.role === 'ADMIN'" class="permission-item granted">
+            ✅ Gestion du troupeau
+          </div>
+          <div *ngIf="user.role === 'ADMIN'" class="permission-item granted">
+            ✅ Configuration système
+          </div>
+
+          <div *ngIf="user.role === 'AGRONOME'" class="permission-item granted">
+            ✅ Consultation du troupeau
+          </div>
+          <div *ngIf="user.role === 'AGRONOME'" class="permission-item granted">
+            ✅ Analyse des données
+          </div>
+          <div *ngIf="user.role === 'AGRONOME'" class="permission-item granted">
+            ✅ Génération de rapports
+          </div>
+          <div *ngIf="user.role === 'AGRONOME'" class="permission-item denied">
+            ❌ Gestion des utilisateurs
+          </div>
+
+          <div *ngIf="user.role === 'ELEVEUR'" class="permission-item granted">
+            ✅ Suivi des vaches personnelles
+          </div>
+          <div *ngIf="user.role === 'ELEVEUR'" class="permission-item granted">
+            ✅ Réception des alertes
+          </div>
+          <div *ngIf="user.role === 'ELEVEUR'" class="permission-item denied">
+            ❌ Gestion du système
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Zone -->
+    <div class="action-zone">
+      <div class="action-card danger">
+        <h3>⚠️ Zone de danger</h3>
+        <p>Les actions suivantes sont irréversibles. Procédez avec précaution.</p>
+        <div class="danger-actions">
+          <button class="btn-danger" (click)="toggleUserStatus()">
+            {{ user.is_active ? '🔒 Désactiver le compte' : '🔓 Activer le compte' }}
+          </button>
+          <button class="btn-danger" (click)="deleteUser()">
+            🗑️ Supprimer définitivement
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

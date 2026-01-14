@@ -1,0 +1,226 @@
+<div class="admin-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>🏠 Tableau de Bord Administrateur</h1>
+      <p>Bienvenue, <strong>{{ currentUser?.full_name }}</strong></p>
+    </div>
+    <button class="btn-refresh" (click)="refreshData()" [disabled]="loading">
+      <span *ngIf="!loading">🔄 Actualiser</span>
+      <span *ngIf="loading">⏳ Chargement...</span>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des données...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading" class="dashboard-content">
+
+    <!-- Stats Cards Row 1 - Users -->
+    <div class="stats-section">
+      <h2 class="section-title">👥 Utilisateurs</h2>
+      <div class="stats-grid">
+        <div class="stat-card stat-users">
+          <div class="stat-icon">👤</div>
+          <div class="stat-content">
+            <h3>{{ stats.users?.total_users || 0 }}</h3>
+            <p>Total Utilisateurs</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-active">
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <h3>{{ stats.users?.active_users || 0 }}</h3>
+            <p>Utilisateurs Actifs</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-admin">
+          <div class="stat-icon">👨‍💼</div>
+          <div class="stat-content">
+            <h3>{{ stats.users?.users_by_role?.admin || 0 }}</h3>
+            <p>Administrateurs</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-agronome">
+          <div class="stat-icon">🔬</div>
+          <div class="stat-content">
+            <h3>{{ stats.users?.users_by_role?.agronome || 0 }}</h3>
+            <p>Agronomes</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-eleveur">
+          <div class="stat-icon">👨‍🌾</div>
+          <div class="stat-content">
+            <h3>{{ stats.users?.users_by_role?.eleveur || 0 }}</h3>
+            <p>Éleveurs</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards Row 2 - Cows -->
+    <div class="stats-section">
+      <h2 class="section-title">🐄 Troupeau</h2>
+      <div class="stats-grid">
+        <div class="stat-card stat-cows">
+          <div class="stat-icon">🐄</div>
+          <div class="stat-content">
+            <h3>{{ stats.cows?.total_cows || 0 }}</h3>
+            <p>Total Vaches</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-cow-active">
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <h3>{{ stats.cows?.active_cows || 0 }}</h3>
+            <p>Vaches Actives</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-health">
+          <div class="stat-icon">💚</div>
+          <div class="stat-content">
+            <h3>{{ stats.cows?.average_health_score || 0 }}%</h3>
+            <p>Santé Moyenne</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-alerts-cows">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-content">
+            <h3>{{ stats.cows?.cows_with_alerts || 0 }}</h3>
+            <p>Vaches avec Alertes</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Cards Row 3 - Alerts -->
+    <div class="stats-section">
+      <h2 class="section-title">🚨 Alertes (7 derniers jours)</h2>
+      <div class="stats-grid">
+        <div class="stat-card stat-total-alerts">
+          <div class="stat-icon">📊</div>
+          <div class="stat-content">
+            <h3>{{ stats.alerts?.total_alerts || 0 }}</h3>
+            <p>Total Alertes</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-new">
+          <div class="stat-icon">🆕</div>
+          <div class="stat-content">
+            <h3>{{ stats.alerts?.new_alerts || 0 }}</h3>
+            <p>Nouvelles</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-critical">
+          <div class="stat-icon">🔴</div>
+          <div class="stat-content">
+            <h3>{{ stats.alerts?.critical_alerts || 0 }}</h3>
+            <p>Critiques</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-warning">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-content">
+            <h3>{{ stats.alerts?.warning_alerts || 0 }}</h3>
+            <p>Avertissements</p>
+          </div>
+        </div>
+
+        <div class="stat-card stat-resolved">
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <h3>{{ stats.alerts?.resolved_alerts || 0 }}</h3>
+            <p>Résolues</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Alerts Section -->
+    <div class="recent-alerts-section">
+      <div class="section-header">
+        <h2 class="section-title">🔔 Alertes Récentes</h2>
+        <a routerLink="/admin/alerts" class="btn-view-all">
+          Voir toutes les alertes →
+        </a>
+      </div>
+
+      <div class="alerts-list" *ngIf="recentAlerts.length > 0">
+        <div
+          *ngFor="let alert of recentAlerts"
+          class="alert-item"
+          [class]="getSeverityClass(alert.severity)">
+
+          <div class="alert-icon">
+            {{ getSeverityIcon(alert.severity) }}
+          </div>
+
+          <div class="alert-content">
+            <div class="alert-header">
+              <strong>{{ getAlertTypeLabel(alert.type) }}</strong>
+              <span class="alert-cow">Vache #{{ alert.cow_id }}</span>
+            </div>
+            <p class="alert-message">{{ alert.message }}</p>
+            <span class="alert-time">{{ alert.created_at | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+
+          <div class="alert-actions">
+            <button
+              class="btn-alert-action"
+              [routerLink]="['/admin/alerts', alert.id]"
+              title="Voir détails">
+              👁️
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-alerts" *ngIf="recentAlerts.length === 0">
+        <div class="empty-icon">🎉</div>
+        <p>Aucune alerte récente</p>
+        <small>Tout va bien dans votre ferme !</small>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-section">
+      <h2 class="section-title">⚡ Actions Rapides</h2>
+      <div class="actions-grid">
+        <a routerLink="/admin/users/new" class="action-card action-user">
+          <span class="action-icon">👤➕</span>
+          <span class="action-label">Nouvel Utilisateur</span>
+        </a>
+
+        <a routerLink="/admin/cows/new" class="action-card action-cow">
+          <span class="action-icon">🐄➕</span>
+          <span class="action-label">Nouvelle Vache</span>
+        </a>
+
+        <a routerLink="/admin/alerts" class="action-card action-alert">
+          <span class="action-icon">🚨</span>
+          <span class="action-label">Voir les Alertes</span>
+        </a>
+
+        <a routerLink="/admin/reports" class="action-card action-report">
+          <span class="action-icon">📊</span>
+          <span class="action-label">Générer Rapport</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -62,7 +62,7 @@ export class AgronomeDashboardComponent implements OnInit {
   }
 
   loadDashboardData(): void {
-    this.cowService.getCows(1, 100).subscribe({
+    this.cowService.getCows({ page: 1, page_size: 100 }).subscribe({
       next: (response) => {
         this.cows = response.cows;
         this.recentCows = response.cows.slice(0, 5); // ⚡ Pour template
